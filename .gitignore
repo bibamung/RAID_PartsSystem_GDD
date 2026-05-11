@@ -1,0 +1,9 @@
+# Excel temporary files
+~$*.xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel

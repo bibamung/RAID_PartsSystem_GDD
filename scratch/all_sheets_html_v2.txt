@@ -1,0 +1,667 @@
+--- TOC ---
+                            <li><a href="#sec-4-2-1">4.2.1. 파츠 정보</a></li>
+                            <li><a href="#sec-4-2-2">4.2.2. 파츠 옵션 그룹</a></li>
+                            <li><a href="#sec-4-2-3">4.2.3. 파츠 옵션</a></li>
+                            <li><a href="#sec-4-2-4">4.2.4. 파츠 주 옵션</a></li>
+                            <li><a href="#sec-4-2-5">4.2.5. 파츠 부 옵션</a></li>
+                            <li><a href="#sec-4-2-6">4.2.6. 파츠 강화</a></li>
+                            <li><a href="#sec-4-2-7">4.2.7. 아이템 테이블</a></li>
+                            <li><a href="#sec-4-2-8">4.2.8. 유저 파츠</a></li>
+                            <li><a href="#sec-4-2-9">4.2.9. 유저 파츠 옵션</a></li>
+                            <li><a href="#sec-4-2-10">4.2.10. 유저 인벤토리</a></li>
+                            <li><a href="#sec-4-2-11">4.2.11. 유저 장착 파츠</a></li>
+                            <li><a href="#sec-4-2-12">4.2.12. 파츠 타입 정보</a></li>
+                            <li><a href="#sec-4-2-13">4.2.13. 등급 정보</a></li>
+                            <li><a href="#sec-4-2-14">4.2.14. 그룹 타입 정보</a></li>
+                            <li><a href="#sec-4-2-15">4.2.15. 옵션 등급 정보</a></li>
+
+--- CONTENT ---
+            <h4 id="sec-4-2-1" style="margin-top: 20px;">4.2.1. 파츠 정보</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약사항</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PartsID</td>
+      <td>INT</td>
+      <td>파츠 고유 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>PartsName</td>
+      <td>VARCHAR(16)</td>
+      <td>파츠 이름</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>PartsType</td>
+      <td>TINYINT</td>
+      <td>1: 생명, 2: 분노, 3: 습격</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>Grade</td>
+      <td>TINYINT</td>
+      <td>1: 일반, 2: 고급, 3: 희귀, 4: 영웅, 5: 전설</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>IconPath</td>
+      <td>VARCHAR(300)</td>
+      <td>아이콘 경로</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>MainOptionGroupID</td>
+      <td>INT</td>
+      <td>주 옵션 그룹 ID</td>
+      <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+    </tr>
+    <tr>
+      <td>SubOptionGroupID</td>
+      <td>INT</td>
+      <td>부 옵션 그룹 ID</td>
+      <td>FK(tb_PartsOptionGroup.OptionGroupID)</td>
+    </tr>
+    <tr>
+      <td>MaxEnhance</td>
+      <td>INT</td>
+      <td>최대 강화 단계</td>
+      <td>NOT NULL, DEFAULT 6</td>
+    </tr>
+    <tr>
+      <td>SellGold</td>
+      <td>INT</td>
+      <td>판매 가격</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>IsActive</td>
+      <td>BOOLEAN</td>
+      <td>사용 여부</td>
+      <td>NOT NULL, DEFAULT TRUE</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-2" style="margin-top: 20px;">4.2.2. 파츠 옵션 그룹</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OptionGroupID (PK)</td>
+      <td>INT</td>
+      <td>옵션 그룹 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>GroupType</td>
+      <td>TINYINT</td>
+      <td>1: Main, 2: Sub</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>PartsType</td>
+      <td>TINYINT</td>
+      <td>1: 생명, 2: 분노, 3: 습격</td>
+      <td>NOT NULL</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-3" style="margin-top: 20px;">4.2.3. 파츠 옵션</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OptionID (PK)</td>
+      <td>INT</td>
+      <td>옵션 ID</td>
+      <td>PK, AUTO_INCREMENT, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>OptionName</td>
+      <td>VARCHAR(16)</td>
+      <td>옵션 이름</td>
+      <td>NOT NULL, UNIQUE</td>
+    </tr>
+    <tr>
+      <td>OptionType</td>
+      <td>TINYINT</td>
+      <td>1: Normal, 2: Special</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>OptionGrade</td>
+      <td>ENUM</td>
+      <td>1: 희귀, 2: 영웅, 3: 전설</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>Desc</td>
+      <td>VARCHAR(300)</td>
+      <td>옵션 설명</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IsActive</td>
+      <td>BOOLEAN</td>
+      <td>사용 여부</td>
+      <td>NOT NULL, DEFAULT TRUE</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-4" style="margin-top: 20px;">4.2.4. 파츠 주 옵션</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ID (PK)</td>
+      <td>INT</td>
+      <td>고유값</td>
+      <td>PK, AUTO_INCREMENT, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>OptionGroupID (FK)</td>
+      <td>INT</td>
+      <td>옵션 그룹</td>
+      <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+    </tr>
+    <tr>
+      <td>OptionID (FK)</td>
+      <td>INT</td>
+      <td>옵션 ID</td>
+      <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+    </tr>
+    <tr>
+      <td>OptionGrade</td>
+      <td>TINYINT</td>
+      <td>1: 희귀, 2: 영웅, 3: 전설</td>
+      <td>NOT NULL</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-5" style="margin-top: 20px;">4.2.5. 파츠 부 옵션</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ID (PK)</td>
+      <td>INT</td>
+      <td>고유값</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>OptionGroupID (FK)</td>
+      <td>INT</td>
+      <td>옵션 그룹</td>
+      <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+    </tr>
+    <tr>
+      <td>OptionID (FK)</td>
+      <td>INT</td>
+      <td>옵션 ID</td>
+      <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+    </tr>
+    <tr>
+      <td>OptionGrade</td>
+      <td>TINYINT</td>
+      <td>1: 희귀, 2: 영웅, 3: 전설</td>
+      <td>NOT NULL</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-6" style="margin-top: 20px;">4.2.6. 파츠 강화</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EnhanceLevel (PK)</td>
+      <td>INT</td>
+      <td>강화 단계</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>DemonicDust</td>
+      <td>INT</td>
+      <td>필요 가루</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>DemonicCrystal</td>
+      <td>INT</td>
+      <td>필요 결정</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>Gold</td>
+      <td>INT</td>
+      <td>필요 골드</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>SuccessLevel</td>
+      <td>INT</td>
+      <td>강화 성공 단계</td>
+      <td>NOT NULL, DEFAULT 1</td>
+    </tr>
+    <tr>
+      <td>RetryCount</td>
+      <td>INT</td>
+      <td>재시도 가능 횟수</td>
+      <td>NOT NULL, DEFAULT 2</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-7" style="margin-top: 20px;">4.2.7. 아이템 테이블</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ItemID (PK)</td>
+      <td>INT</td>
+      <td>아이템 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>ItemName</td>
+      <td>VARCHAR(16)</td>
+      <td>이름</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>ItemType</td>
+      <td>TINYINT</td>
+      <td>재화 / 파츠 / 재료</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>IconPath</td>
+      <td>VARCHAR(300)</td>
+      <td>아이콘</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>Grade</td>
+      <td>TINYINT</td>
+      <td>등급</td>
+      <td>NOT NULL</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-8" style="margin-top: 20px;">4.2.8. 유저 파츠</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UserPartsID (PK)</td>
+      <td>LONG</td>
+      <td>유저 파츠 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>UserID</td>
+      <td>LONG</td>
+      <td>유저 ID</td>
+      <td>FK(tb_User.UserID)</td>
+    </tr>
+    <tr>
+      <td>PartsID (FK)</td>
+      <td>INT</td>
+      <td>파츠 원본 ID</td>
+      <td>NOT NULL, FK(tb_Parts.PartsID)</td>
+    </tr>
+    <tr>
+      <td>EnhanceLevel</td>
+      <td>INT</td>
+      <td>강화 단계</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>RetryCount</td>
+      <td>INT</td>
+      <td>남은 재시도</td>
+      <td>NOT NULL, DEFAULT 0</td>
+    </tr>
+    <tr>
+      <td>IsLocked</td>
+      <td>BOOLEAN</td>
+      <td>잠금 여부</td>
+      <td>NOT NULL, DEFAULT FALSE</td>
+    </tr>
+    <tr>
+      <td>CreatedAt</td>
+      <td>DATETIME</td>
+      <td>획득 시간</td>
+      <td>NOT NULL, DEFAULT CURRENT_TIMESTAMP</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-9" style="margin-top: 20px;">4.2.9. 유저 파츠 옵션</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UserPartsOptionID (PK)</td>
+      <td>LONG</td>
+      <td>고유 ID</td>
+      <td>PK, AUTO_INCREMENT, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>UserPartsID (FK)</td>
+      <td>LONG</td>
+      <td>유저 파츠</td>
+      <td>NOT NULL, FK(tb_UserParts.UserPartsID)</td>
+    </tr>
+    <tr>
+      <td>OptionID (FK)</td>
+      <td>INT</td>
+      <td>옵션</td>
+      <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+    </tr>
+    <tr>
+      <td>OptionValue</td>
+      <td>FLOAT</td>
+      <td>실제 수치</td>
+      <td>NOT NULL</td>
+    </tr>
+    <tr>
+      <td>IsMain</td>
+      <td>BOOLEAN</td>
+      <td>주 옵션 여부</td>
+      <td>NOT NULL, DEFAULT FALSE</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-10" style="margin-top: 20px;">4.2.10. 유저 인벤토리</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UserID</td>
+      <td>LONG</td>
+      <td>유저 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>ItemID</td>
+      <td>INT</td>
+      <td>아이템 ID</td>
+      <td>PK, NOT NULL, FK(tb_Item.ItemID)</td>
+    </tr>
+    <tr>
+      <td>Count</td>
+      <td>LONG</td>
+      <td>보유 수량</td>
+      <td>NOT NULL, DEFAULT 0, CHECK(Count &gt;= 0)</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-11" style="margin-top: 20px;">4.2.11. 유저 장착 파츠</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>컬럼명</th>
+      <th>타입</th>
+      <th>설명</th>
+      <th>제약조건</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UserID</td>
+      <td>LONG</td>
+      <td>유저 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>CharacterID</td>
+      <td>LONG</td>
+      <td>캐릭터 ID</td>
+      <td>PK, NOT NULL</td>
+    </tr>
+    <tr>
+      <td>LifePartsID</td>
+      <td>LONG</td>
+      <td>생명 파츠</td>
+      <td>FK(tb_UserParts.UserPartsID)</td>
+    </tr>
+    <tr>
+      <td>RagePartsID</td>
+      <td>LONG</td>
+      <td>분노 파츠</td>
+      <td>FK(tb_UserParts.UserPartsID)</td>
+    </tr>
+    <tr>
+      <td>AssaultPartsID</td>
+      <td>LONG</td>
+      <td>습격 파츠</td>
+      <td>FK(tb_UserParts.UserPartsID)</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-12" style="margin-top: 20px;">4.2.12. 파츠 타입 정보</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>PartsType</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>LIFE</td>
+      <td>생명</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>RAGE</td>
+      <td>분노</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>ASSAULT</td>
+      <td>습격</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-13" style="margin-top: 20px;">4.2.13. 등급 정보</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Grade</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>NORMAL</td>
+      <td>일반</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>ADVANCED</td>
+      <td>고급</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>RARE</td>
+      <td>희귀</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>EPIC</td>
+      <td>영웅</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>LEGENDARY</td>
+      <td>전설</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-14" style="margin-top: 20px;">4.2.14. 그룹 타입 정보</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>GroupType</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Main</td>
+      <td>주 옵션</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Sub</td>
+      <td>부가 옵션</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <h4 id="sec-4-2-15" style="margin-top: 20px;">4.2.15. 옵션 등급 정보</h4>
+            <div style="margin-top: 10px;">
+                <table class="code-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Grade</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>RARE</td>
+      <td>희귀</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>EPIC</td>
+      <td>영웅</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>LEGENDARY</td>
+      <td>전설</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+

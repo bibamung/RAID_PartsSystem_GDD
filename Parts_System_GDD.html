@@ -1,0 +1,2934 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project:RAID - 파츠 시스템</title>
+    <!-- Mermaid.js for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            theme: 'dark',
+            startOnLoad: true,
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+            securityLevel: 'loose',
+        });
+    </script>
+    <style>
+        :root {
+            /* 컬러 팔레트: 다크 테마 */
+            --bg-base: #141417;
+            --bg-panel: #1e1e24;
+            --bg-card: #272730;
+            --text-main: #e2e2e8;
+            --text-muted: #9ba1a6;
+            --accent-primary: #00d2ff;
+            --accent-secondary: #ff3366;
+            --border-color: #3a3a45;
+
+            /* 등급별 컬러 */
+            --grade-normal: #888888;
+            --grade-advanced: #4caf50;
+            --grade-rare: #3b82f6;
+            --grade-epic: #a855f7;
+            --grade-legend: #f59e0b;
+
+            /* 강조 박스 테마 */
+            --box-info-bg: rgba(59, 130, 246, 0.1);
+            --box-info-border: #3b82f6;
+            --box-warning-bg: rgba(245, 158, 11, 0.1);
+            --box-warning-border: #f59e0b;
+            --box-bm-bg: rgba(255, 51, 102, 0.1);
+            --box-bm-border: #ff3366;
+        }
+
+        /* 기본 리셋 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* 좌측 TOC (목차) 영역 */
+        nav.toc {
+            position: fixed;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            padding: 30px 20px;
+            overflow-y: auto;
+        }
+
+        nav.toc h2 {
+            color: var(--accent-primary);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        nav.toc ul {
+            list-style: none;
+        }
+
+        nav.toc>ul>li {
+            margin-bottom: 15px;
+        }
+
+        nav.toc ul ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        nav.toc ul ul li {
+            margin-bottom: 8px;
+        }
+
+
+        nav.toc a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: block;
+            transition: color 0.2s, padding-left 0.2s;
+        }
+
+        nav.toc a:hover {
+            color: var(--accent-primary);
+            padding-left: 4px;
+        }
+
+        /* 우측 본문 영역 */
+        main.content {
+            margin-left: 280px;
+            padding: 50px 80px;
+            max-width: 1800px;
+            /* 너비 확장 */
+            width: 100%;
+        }
+
+        /* 문서 메타 정보 */
+        .doc-header {
+            background-color: var(--bg-panel);
+            padding: 30px;
+            border-radius: 8px;
+            border-top: 4px solid var(--accent-primary);
+            margin-bottom: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .doc-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            background-color: #1e2127;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .meta-pill:hover {
+            border-color: var(--accent-primary);
+            background-color: #262b34;
+        }
+
+        .meta-pill strong {
+            color: #f1f5f9;
+            margin-right: 6px;
+            font-weight: 600;
+        }
+
+        .meta-pill::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .pill-v::before {
+            background-color: #10b981;
+        }
+
+        /* Green */
+        .pill-d::before {
+            background-color: #b45309;
+        }
+
+        /* Brown */
+        .pill-u::before {
+            background-color: #0ea5e9;
+        }
+
+        /* Blue */
+        .pill-s::before {
+            background-color: #8b5cf6;
+        }
+
+        /* Purple */
+
+        /* 섹션 카드 UI */
+        section.card {
+            background-color: var(--bg-panel);
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        h2.section-title {
+            font-size: 1.8rem;
+            color: var(--accent-primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h3.sub-title {
+            font-size: 1.4rem;
+            color: #ffffff;
+            margin: 40px 0 20px 0;
+            padding-left: 15px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        h4 {
+            font-size: 1.15rem;
+            color: #ffffff;
+            margin: 30px 0 15px 0;
+        }
+
+        /* 리스트 스타일 */
+        ul.content-list {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        ul.content-list>li {
+            margin-bottom: 10px;
+        }
+
+        ul.content-list ul {
+            margin-top: 10px;
+            padding-left: 25px;
+            list-style-type: circle;
+        }
+
+        /* 코드블럭 스타일 테이블 (자동 얼룩말 무늬) */
+        table.code-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95rem;
+            background-color: #1a1a20;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px var(--border-color);
+        }
+
+        table.code-table th,
+        table.code-table td {
+            padding: 12px 18px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        /* 4.2 섹션 전용 테이블 컬럼 너비 균등화 */
+        #sec-4-2-group table.code-table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        #sec-4-2-group table.code-table th,
+        #sec-4-2-group table.code-table td {
+            word-break: break-all;
+        }
+
+        #sec-4-2-group table.code-table th:nth-child(1),
+        #sec-4-2-group table.code-table td:nth-child(1) {
+            width: 20%;
+        }
+
+        #sec-4-2-group table.code-table th:nth-child(2),
+        #sec-4-2-group table.code-table td:nth-child(2) {
+            width: 15%;
+        }
+
+        /* 4열 테이블의 경우 3, 4번 컬럼 너비 지정 */
+        #sec-4-2-group table.code-table tr th:nth-child(3),
+        #sec-4-2-group table.code-table tr td:nth-child(3) {
+            width: 35%;
+        }
+
+        #sec-4-2-group table.code-table tr th:nth-child(4),
+        #sec-4-2-group table.code-table tr td:nth-child(4) {
+            width: 30%;
+        }
+
+        /* 3열 테이블의 경우 3번 컬럼이 나머지 차지 (65%) */
+        #sec-4-2-group table.code-table.cols-3 tr th:nth-child(3),
+        #sec-4-2-group table.code-table.cols-3 tr td:nth-child(3) {
+            width: 65%;
+        }
+
+        table.code-table th {
+            background-color: #23232c;
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        table.code-table tr:nth-child(even) {
+            background-color: #1f1f26;
+        }
+
+        table.code-table tr:hover {
+            background-color: #2a2a35;
+        }
+
+        /* 다이어그램 컨테이너 */
+        .diagram-container {
+            background-color: #1a1a1f;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* 강조 박스 컴포넌트 */
+        .box {
+            padding: 20px 25px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: var(--bg-card);
+        }
+
+        .box-info {
+            background-color: var(--box-info-bg);
+            border-color: var(--box-info-border);
+        }
+
+        .box-info::before {
+            content: "💡 Notice";
+            display: block;
+            font-weight: bold;
+            color: var(--box-info-border);
+            margin-bottom: 10px;
+        }
+
+        .box-warning {
+            background-color: var(--box-warning-bg);
+            border-color: var(--box-warning-border);
+        }
+
+        .box-warning::before {
+            content: "⚠️ 주의사항";
+            display: block;
+            font-weight: bold;
+            color: var(--box-warning-border);
+            margin-bottom: 10px;
+        }
+
+        .box-bm {
+            background-color: var(--box-bm-bg);
+            border-color: var(--box-bm-border);
+        }
+
+        .box-bm::before {
+            content: "💎 BM (Business Model) 전략";
+            display: block;
+            font-weight: bold;
+            color: var(--box-bm-border);
+            margin-bottom: 10px;
+        }
+
+        /* 상태 태그 (Badge) */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            font-family: sans-serif;
+        }
+
+        .badge.normal {
+            background-color: var(--grade-normal);
+        }
+
+        .badge.advanced {
+            background-color: var(--grade-advanced);
+        }
+
+        .badge.rare {
+            background-color: var(--grade-rare);
+        }
+
+        .badge.epic {
+            background-color: var(--grade-epic);
+        }
+
+        .badge.legend {
+            background-color: var(--grade-legend);
+        }
+
+        /* 시스템 흐름 박스 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 30px;
+            background-color: #17171d;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            background-color: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 4px 10px rgba(0, 210, 255, 0.1);
+        }
+
+        .flow-step.result {
+            border-color: var(--grade-advanced);
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.1);
+        }
+
+        .flow-step.chance {
+            border-color: var(--grade-legend);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.1);
+        }
+
+        .flow-arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* 이미지 Placeholder */
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 250px;
+            background-color: #18181d;
+            border: 2px dashed #444;
+            border-radius: 8px;
+            color: #888;
+            margin: 30px 0;
+        }
+
+        .image-placeholder span {
+            font-style: italic;
+            margin-top: 10px;
+            font-family: Consolas, monospace;
+        }
+
+        /* 접을 수 있는 상세 설명 영역 */
+        details.expandable {
+            background-color: #212129;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        details.expandable summary {
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        details.expandable summary::before {
+            content: "▶";
+            font-size: 0.8rem;
+            margin-right: 10px;
+            color: var(--accent-primary);
+            transition: transform 0.2s;
+        }
+
+        details.expandable[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        details.expandable[open] summary {
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        code {
+            background-color: #111;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            color: var(--accent-primary);
+        }
+
+        /* 이미지 호버 확대 효과 */
+        .zoom-img {
+            transition: all 0.3s ease-in-out;
+            cursor: zoom-in;
+        }
+
+        .zoom-img:hover {
+            max-height: 85vh !important;
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+            position: relative;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 좌측 TOC (Table of Contents) -->
+    <nav class="toc">
+        <h2>📑 문서 목차</h2>
+        <ul>
+            <li><a href="#sec-1">1. 개요</a>
+                <ul>
+                    <li><a href="#sec-1-1">1.1. 시스템 개요</a></li>
+                    <li><a href="#sec-1-2">1.2. 기획 의도</a></li>
+                </ul>
+            </li>
+            <li><a href="#sec-2">2. 시스템</a>
+                <ul>
+                    <li><a href="#sec-2-1">2.1. 파츠 기본 구조</a></li>
+                    <li><a href="#sec-2-2">2.2. 성장 구조</a>
+                        <ul>
+                            <li><a href="#sec-2-2-1">2.2.1. 파츠 등급</a></li>
+                            <li><a href="#sec-2-2-2">2.2.2. 옵션 등급</a></li>
+                            <li><a href="#sec-2-2-3">2.2.3. 파츠 뽑기</a>
+                                <ul>
+                                    <li><a href="#sec-2-2-3-1">2.2.3.1. 파츠 상자 종류</a></li>
+                                    <li><a href="#sec-2-2-3-2">2.2.3.2. 파츠 등급별 뽑기 확률</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#sec-2-2-4">2.2.4. 파츠 강화</a></li>
+                            <li><a href="#sec-2-2-5">2.2.5. 파츠 장착</a>
+                                <ul>
+                                    <li><a href="#sec-2-2-5-1">2.2.5.1. 슬롯 구성 및 타입 제한</a></li>
+                                    <li><a href="#sec-2-2-5-2">2.2.5.2. 장착 규칙 및 조건</a></li>
+                                    <li><a href="#sec-2-2-5-3">2.2.5.3. 능력치 적용</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><a href="#sec-3">3. UI/UX</a>
+                <ul>
+                    <li><a href="#sec-3-1">3.1. 장착 및 관리 UI</a>
+                        <ul>
+                            <li><a href="#sec-3-1-1">3.1.1. 인벤토리 - 파츠</a></li>
+                            <li><a href="#sec-3-1-2">3.1.2. 파츠 교체</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#sec-3-2">3.2. 상점 뽑기 연출</a>
+                        <ul>
+                            <li><a href="#sec-3-2-1">3.2.1. 파츠 상자 구매</a></li>
+                            <li><a href="#sec-3-2-2">3.2.2. 구매 팝업</a>
+                                <ul>
+                                    <li><a href="#sec-3-2-2-1">3.2.2.1. 뽑기 진행 확인 팝업</a></li>
+                                    <li><a href="#sec-3-2-2-2">3.2.2.2. 재화 부족 팝업</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#sec-3-2-3">3.2.3. 결과 창</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#sec-3-3">3.3. 강화 연출 UX</a>
+                        <ul>
+                            <li><a href="#sec-3-3-1">3.3.1. 파츠 강화</a></li>
+                            <li><a href="#sec-3-3-2">3.3.2. 파츠 재강화</a></li>
+                            <li><a href="#sec-3-3-3">3.3.3. 파츠 강화 결과창</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><a href="#sec-4">4. 데이터 테이블 구조</a>
+                <ul>
+                    <li><a href="#sec-4-1">4.1. 테이블 관계도</a></li>
+                    <li><a href="#sec-4-2">4.2. 테이블 상세 정의</a>
+                        <ul>
+                            <li><a href="#sec-4-2-1">4.2.1. 파츠 정보 (tb_Parts)</a></li>
+                            <li><a href="#sec-4-2-2">4.2.2. 파츠 옵션 그룹 (tb_PartsOptionGroup)</a></li>
+                            <li><a href="#sec-4-2-3">4.2.3. 파츠 옵션 (tb_PartsOption)</a></li>
+                            <li><a href="#sec-4-2-4">4.2.4. 파츠 주 옵션 (tb_PartsMainOption)</a></li>
+                            <li><a href="#sec-4-2-5">4.2.5. 파츠 부가 옵션 (tb_PartsSubOption)</a></li>
+                            <li><a href="#sec-4-2-6">4.2.6. 파츠 강화 (tb_PartsEnhance)</a></li>
+                            <li><a href="#sec-4-2-7">4.2.7. 아이템 테이블 (tb_Item)</a></li>
+                            <li><a href="#sec-4-2-8">4.2.8. 유저 파츠 (tb_UserParts)</a></li>
+                            <li><a href="#sec-4-2-9">4.2.9. 유저 파츠 옵션 (tb_UserPartsOption)</a></li>
+                            <li><a href="#sec-4-2-10">4.2.10. 유저 인벤토리 (tb_UserInventory)</a></li>
+                            <li><a href="#sec-4-2-11">4.2.11. 유저 장착 파츠 (tb_UserEquipParts)</a></li>
+                            <li><a href="#sec-4-2-12">4.2.12. 파츠 타입 정보 (tb_PartsType)</a></li>
+                            <li><a href="#sec-4-2-13">4.2.13. 등급 정보 (tb_Grade)</a></li>
+                            <li><a href="#sec-4-2-14">4.2.14. 그룹 타입 정보 (tb_GroupType)</a></li>
+                            <li><a href="#sec-4-2-15">4.2.15. 옵션 등급 정보 (tb_OptionGrade)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 우측 본문 영역 -->
+    <main class="content">
+
+        <!-- 문서 메타 정보 -->
+        <div class="doc-header">
+            <h1>Project:RAID 파츠 시스템</h1>
+            <div class="meta-info">
+                <span class="meta-pill pill-v">v1.0</span>
+                <span class="meta-pill pill-u">2026.05.07</span>
+                <span class="meta-pill pill-d">김성원</span>
+                <span class="meta-pill pill-s">파츠 시스템 기획 (구성, 뽑기, 강화, 장착)</span>
+            </div>
+        </div>
+
+
+        <!-- 1. 개요 -->
+        <section class="card" id="sec-1">
+            <h2 class="section-title">1. 개요</h2>
+
+            <h3 class="sub-title" id="sec-1-1">1.1. 시스템 개요</h3>
+            <table class="code-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">분류</th>
+                        <th>내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>시스템명</strong></td>
+                        <td>Project:RAID 파츠 시스템</td>
+                    </tr>
+                    <tr>
+                        <td><strong>게임 / 장르</strong></td>
+                        <td>Project:RAID / 헌팅 액션 RPG</td>
+                    </tr>
+                    <tr>
+                        <td><strong>한줄 정의</strong></td>
+                        <td>무기에 장착하여 전투력을 보조하고 다양한 빌드 세팅의 기반이 되는 신규 장착물 시스템</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="sub-title" id="sec-1-2">1.2. 기획 의도</h3>
+            <div class="box box-info">
+                <ul class="content-list">
+                    <li><strong>전투의 깊이와 전략성 강화 (유저 관점):</strong> 플레이어는 전투 중 획득한 파츠를 조합하여 자신만의 독창적인 전투 스타일을 완성합니다.</li>
+                    <li>단순한 공격력/방어력 수치 상승을 넘어, 스킬 메커니즘을 보조하는 유의미한 옵션 조합 경험을 제공하여 지속적인 파밍의 동기와 목표를 부여합니다.</li>
+                </ul>
+            </div>
+
+            <div class="box box-bm">
+                <ul class="content-list">
+                    <li><strong>핵심 재화 소모처(Sink) 구축 (사업 관점):</strong> 파츠의 획득(뽑기)과 성장(강화) 과정에서 대량의 골드 및 전용 재화 소모를 필수적으로
+                        동반하도록 설계하였습니다.</li>
+                    <li>이러한 스펙업 욕구 자극은 자연스럽게 인게임 골드 구매 전환을 유도하며, 코어 유저 대상의 안정적인 뽑기 패키지 수익 창출로 직결됩니다.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 2. 시스템 -->
+        <section class="card" id="sec-2">
+            <h2 class="section-title">2. 시스템 상세</h2>
+
+            <h3 class="sub-title" id="sec-2-1">2.1. 파츠 기본 구조</h3>
+            <ul class="content-list">
+                <li>캐릭터의 스펙을 올려주는 <strong>무기 전용 악세사리</strong> 아이템입니다. (착용 시 별도의 캐릭터 외형 변화는 발생하지 않습니다.)</li>
+                <li>각 무기에는 <strong>총 3개의 파츠 전용 슬롯</strong>이 고정적으로 제공됩니다.
+                    <ul>
+                        <li>🩸 <strong>생명 슬롯</strong> (Life)</li>
+                        <li>🔥 <strong>분노 슬롯</strong> (Fury)</li>
+                        <li>⚡ <strong>습격 슬롯</strong> (Assault)</li>
+                    </ul>
+                </li>
+                <li>파츠의 옵션 구조는 <strong>[주 옵션 1종] + [부가 옵션 최대 2종]</strong>으로 세분화됩니다.
+                    <ul>
+                        <li><strong>주 옵션:</strong> 파츠별 특수 옵션 풀에서 1종이 결정됩니다.</li>
+                        <li><strong>부가 옵션:</strong> 특수 옵션 및 공통 옵션 풀 내에서 2종이 결정됩니다.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="box box-warning">
+                <strong>옵션 부여 데이터 제약 사항:</strong><br>
+                하나의 동일한 파츠 안에서 주 옵션과 부가 옵션은 <strong>절대로 중복해서 등장하지 않습니다.</strong> 시스템 구현 시 옵션 롤링 테이블에서 중복 배제 로직 처리가
+                필수적입니다.
+            </div>
+
+
+            <h3 class="sub-title" id="sec-2-2">2.2. 성장 구조</h3>
+
+            <h4 id="sec-2-2-1">2.2.1. 파츠 등급</h4>
+            <p>파츠의 획득 등급에 따라 초기 옵션의 개수 및 최대 성장 수치의 한계가 달라지며, 이는 성장의 단계별 목표를 제시합니다.</p>
+            <table class="code-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">등급</th>
+                        <th style="width: 35%;">옵션 구성</th>
+                        <th>설계 목적 및 주요 특징</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge normal">일반 (Normal)</span></td>
+                        <td>주 옵션 1개</td>
+                        <td>초반 구간 장착 학습 및 스펙업 기본 체험용</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge advanced">고급 (Advanced)</span></td>
+                        <td>주 옵션 1개 + <strong>부가 옵션 1개</strong></td>
+                        <td>초중반 기본 파밍 단계 보상</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge rare">희귀 (Rare)</span></td>
+                        <td>주 옵션 1개 + <strong>부가 옵션 2개</strong></td>
+                        <td>부가 옵션이 2개로 고정되며, <strong>하급 옵션</strong>이 등장하는 본격적인 빌드 세팅의 시작점</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge epic">영웅 (Epic)</span></td>
+                        <td>주 옵션 1개 + 부가 옵션 2개</td>
+                        <td>빌드 심화 단계. <strong>중급 옵션</strong>까지 등장 가능</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge legend">전설 (Legend)</span></td>
+                        <td>주 옵션 1개 + 부가 옵션 2개</td>
+                        <td>최종 엔드 스펙 장비. 가장 강력한 <strong>상급 옵션</strong>까지 등장 가능</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 id="sec-2-2-2">2.2.2. 옵션 등급</h4>
+            <p>파츠를 최초 획득하여 옵션이 부여되는 시점에, 해당 옵션의 절대 수치가 <strong>하 / 중 / 상</strong> 3단계 등급으로 랜덤하게 결정됩니다.</p>
+
+            <h4 id="sec-2-1-1">옵션 상세 구성표</h4>
+            <table class="code-table" style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="text-align: center;">분류</th>
+                        <th rowspan="2" style="text-align: center;">등장 조건</th>
+                        <th rowspan="2" style="text-align: center;">옵션명</th>
+                        <th colspan="3" style="text-align:center;">옵션 효과</th>
+                        <th rowspan="2" style="text-align: center;">등장 확률</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:center;">하</th>
+                        <th style="text-align:center;">중</th>
+                        <th style="text-align:center;">상</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 공통 옵션 -->
+                    <tr>
+                        <td rowspan="7" style="vertical-align: middle;">공통 옵션</td>
+                        <td rowspan="7" style="vertical-align: middle;">모든 파츠에서 등장</td>
+                        <td style="text-align: left;">체력 30% 이하일 때 공격력 증가</td>
+                        <td>2.50%</td>
+                        <td>3.50%</td>
+                        <td>5%</td>
+                        <td rowspan="7" style="vertical-align: middle;">25%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">첫 타격 시 추가피해</td>
+                        <td>50%</td>
+                        <td>75%</td>
+                        <td>150%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">적 처치 시 3초간 랜덤 버프 획득<br>(공속, 이속, 공, 방 증가)</td>
+                        <td>1.50%</td>
+                        <td>2.50%</td>
+                        <td>3.50%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">보스 피해 증가</td>
+                        <td>1%</td>
+                        <td>2%</td>
+                        <td>3%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">파괴된 부위 공격 시 피해증가</td>
+                        <td>2.50%</td>
+                        <td>3.50%</td>
+                        <td>5%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">적 타격 시 스테미나 회복</td>
+                        <td>5</td>
+                        <td>10</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">피격 시 경직 시간 감소</td>
+                        <td>1.50%</td>
+                        <td>2%</td>
+                        <td>2.50%</td>
+                    </tr>
+                    <!-- 특수 옵션: 생명 -->
+                    <tr>
+                        <td rowspan="9" style="vertical-align: middle;">특수 옵션</td>
+                        <td rowspan="3" style="vertical-align: middle;">생명 슬롯</td>
+                        <td style="text-align: left;">최대 체력 증가</td>
+                        <td>1%</td>
+                        <td>1.50%</td>
+                        <td>2.50%</td>
+                        <td rowspan="9" style="vertical-align: middle;">25%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">방어력 증가</td>
+                        <td>1%</td>
+                        <td>1.25%</td>
+                        <td>2.50%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">스테미나 증가</td>
+                        <td>1.25%</td>
+                        <td>1.50%</td>
+                        <td>2%</td>
+                    </tr>
+                    <!-- 특수 옵션: 분노 -->
+                    <tr>
+                        <td rowspan="3" style="vertical-align: middle;">분노 슬롯</td>
+                        <td style="text-align: left;">공격력 증가</td>
+                        <td>3.50%</td>
+                        <td>4.50%</td>
+                        <td>5%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">공격 속도 증가</td>
+                        <td>2%</td>
+                        <td>2.50%</td>
+                        <td>3.25%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">이동 속도 증가</td>
+                        <td>0.50%</td>
+                        <td>0.75%</td>
+                        <td>1%</td>
+                    </tr>
+                    <!-- 특수 옵션: 습격 -->
+                    <tr>
+                        <td rowspan="3" style="vertical-align: middle;">습격 슬롯</td>
+                        <td style="text-align: left;">크리티컬 확률 증가</td>
+                        <td>2.50%</td>
+                        <td>3.25%</td>
+                        <td>3.75%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">크리티컬 데미지 증가</td>
+                        <td>5%</td>
+                        <td>6.50%</td>
+                        <td>7.50%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">스테미나 회복 속도 증가</td>
+                        <td>1.25%</td>
+                        <td>1.50%</td>
+                        <td>2%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <details class="expandable">
+                <summary>파츠 등급별 세부 옵션 부여 확률표 보기</summary>
+                <table class="code-table">
+                    <thead>
+                        <tr>
+                            <th>대상 파츠 등급</th>
+                            <th>희귀(Rare) 확률</th>
+                            <th>영웅(Epic) 확률</th>
+                            <th>전설(Legend) 확률</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>고급 ~ 희귀</td>
+                            <td>100%</td>
+                            <td>0%</td>
+                            <td>0%</td>
+                        </tr>
+                        <tr>
+                            <td>영웅</td>
+                            <td>70%</td>
+                            <td>30%</td>
+                            <td>0%</td>
+                        </tr>
+                        <tr>
+                            <td>전설</td>
+                            <td>50%</td>
+                            <td>30%</td>
+                            <td>20%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </details>
+
+            <div class="box box-bm">
+                동일한 최상위 전설 파츠를 획득하더라도 옵션 등급 배분(예: 상/상/상 조합)에 따라 실질적인 성능 편차가 매우 크게 발생합니다. 이러한 다중 난수 구조는 소위 '종결 파츠'를 완성하기
+                위해 하드코어 유저들이 끊임없이 뽑기를 수행하게 만드는 가장 핵심적인 매출 견인 장치입니다.
+            </div>
+
+            <h4 id="sec-2-2-3">2.2.3. 파츠 뽑기 (Gacha System)</h4>
+
+            <div class="mermaid"
+                style="background: var(--bg-panel); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center;">
+                graph TD
+                Start([파츠 뽑기 UI 진입]) --> Select[파츠 뽑기 상자 선택]
+                Select --> CheckTickets{보유 뽑기권 수량 확인}
+
+                CheckTickets -- "부족" --> Alert[재화 부족 알림 팝업 출력]
+                Alert --> Cancel[취소 버튼 입력]
+                Cancel --> End_Cancel([종료])
+
+                Alert --> Confirm[확인 버튼 입력]
+                Confirm --> Buy[재화 구매]
+                Buy --> Consume[재화 소모]
+
+                CheckTickets -- "충분" --> Consume[재화 소모]
+                Consume --> Ceiling{천장 여부}
+
+                Ceiling -- "아니오" --> ProbTable[확률 테이블 기반<br />뽑기 진행]
+                ProbTable --> UpdateCount[천장 카운트 갱신]
+
+                Ceiling -- "예" --> LegendGuar[전설 파츠 확정 지급]
+                LegendGuar --> ResetCount[천장 카운트 초기화]
+
+                UpdateCount --> PlayAnim[뽑기 연출 재생]
+                ResetCount --> PlayAnim
+
+                PlayAnim --> ConfirmAcq[확인 버튼 입력]
+                ConfirmAcq --> Acquire[무기 파츠 획득]
+                Acquire --> End([종료])
+
+                %% 스타일링
+                style Start fill:#fbc02d,stroke:#f9a825,color:#000
+                style End fill:#fbc02d,stroke:#f9a825,color:#000
+                style End_Cancel fill:#fbc02d,stroke:#f9a825,color:#000
+                style CheckTickets fill:#fff9c4,stroke:#fbc02d,color:#000
+                style Ceiling fill:#fff9c4,stroke:#fbc02d,color:#000
+
+                style Alert fill:#ffebee,stroke:#ef5350,color:#c62828
+                style Consume fill:#e3f2fd,stroke:#42a5f5,color:#1565c0
+                style ProbTable fill:#eceff1,stroke:#607d8b,color:#263238
+                style LegendGuar fill:#fff8e1,stroke:#ffa000,color:#000
+            </div>
+
+            <p>파츠는 상점에서 전용 뽑기권을 소모하여 획득할 수 있으며, 각 상자별로 특화된 파츠 풀과 확률이 적용됩니다.</p>
+
+            <h5 id="sec-2-2-3-1"
+                style="margin-top: 15px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                2.2.3.1. 파츠 상자 종류</h5>
+            <table class="code-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">상자 종류</th>
+                        <th style="width: 30%;">소모 재화</th>
+                        <th>등장 내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>무기 파츠 상자</strong></td>
+                        <td>무기 파츠 뽑기권 1개 소모</td>
+                        <td>모든 종류의 파츠가 랜덤하게 등장합니다. (통합 뽑기)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>생명의 상자</strong></td>
+                        <td>생명의 파츠 뽑기권 1개 소모</td>
+                        <td><strong>생명의 파츠</strong>만 등장합니다. (타겟 뽑기)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>분노의 상자</strong></td>
+                        <td>분노의 파츠 뽑기권 1개 소모</td>
+                        <td><strong>분노의 파츠</strong>만 등장합니다. (타겟 뽑기)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>습격의 상자</strong></td>
+                        <td>습격의 파츠 뽑기권 1개 소모</td>
+                        <td><strong>습격의 파츠</strong>만 등장합니다. (타겟 뽑기)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h5 id="sec-2-2-3-2"
+                style="margin-top: 15px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                2.2.3.2. 파츠 등급별 뽑기 확률</h5>
+            <table class="code-table" style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th style="text-align: center;">분류</th>
+                        <th style="text-align: center;">일반</th>
+                        <th style="text-align: center;">고급</th>
+                        <th style="text-align: center;">희귀</th>
+                        <th style="text-align: center;">영웅</th>
+                        <th style="text-align: center;">전설</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>무기 파츠 상자</strong></td>
+                        <td>30%</td>
+                        <td>25%</td>
+                        <td>20%</td>
+                        <td>15%</td>
+                        <td>10%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>생명/분노/습격의 상자</strong></td>
+                        <td>33%</td>
+                        <td>28%</td>
+                        <td>20%</td>
+                        <td>12%</td>
+                        <td>7%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <strong>천장 시스템 (Ceiling System)</strong>
+            <ul class="content-list" style="margin-top: 10px; margin-bottom: 0;">
+                <li><strong>무기 파츠 상자:</strong> 20회 소환 시 확정으로 <span class="badge legend">전설 등급</span> 파츠가 등장합니다.</li>
+                <li><strong>생명/분노/습격의 상자:</strong> 30회 소환 시 확정으로 <span class="badge legend">전설 등급</span> 파츠가 등장합니다.
+                </li>
+            </ul>
+
+            <div class="box box-bm">
+                <strong>가챠 재화 4종 분리 설계의 의도:</strong>
+                재화를 슬롯별로 명확히 나누어 설계한 초석은 타겟형 BM 판매를 위함입니다. 유저가 플레이 후반부에 1개 슬롯의 종결급 파츠만 남겨둔 상황이 되었을 때, 범용 뽑기가 아닌 '특정 부위
+                전용 뽑기 패키지'를 고가에 판매하여 결제 저항을 낮추고 매출 효율을 극대화할 수 있습니다.
+            </div>
+
+            <h4 id="sec-2-2-4">2.2.4. 파츠 강화</h4>
+
+            <div class="mermaid"
+                style="background: var(--bg-panel); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center;">
+                graph TD
+                Start([강화 UI 진입]) --> Select[강화 대상 파츠 선택]
+                Select --> QueryStep[현재 강화 단계 조회]
+                QueryData[(tb_PartsEnhance <br />데이터 조회)] -.-> QueryStep
+
+                QueryStep --> CheckCurrency{보유 재화 ≥ 필요 재화}
+
+                CheckCurrency -- "부족" --> DisableBtn[강화 버튼 비활성화]
+                CheckCurrency -- "충분" --> Deduct[재화 차감<br />보유 재화 - 필요 재화]
+
+                Deduct --> ServerReq[서버 강화 성공단계 요청]
+                ServerReq --> IncStep[강화단계 증가]
+                IncStep --> IncStat[강화 성공 단계 테이블 기반<br />주 옵션 / 부가옵션 1종 수치 증가]
+                IncStat --> Anim[강화 결과 연출 출력]
+                Anim --> ShowUI[강화 결과 UI 표시]
+                ShowUI --> End([종료])
+
+                %% 스타일링
+                style Start fill:#fbc02d,stroke:#f9a825,color:#000
+                style End fill:#fbc02d,stroke:#f9a825,color:#000
+                style CheckCurrency fill:#fff9c4,stroke:#fbc02d,color:#000
+                style QueryData fill:#455a64,stroke:#263238,color:#fff
+                style DisableBtn fill:#ffebee,stroke:#ef5350,color:#c62828
+                style Deduct fill:#e3f2fd,stroke:#42a5f5,color:#1565c0
+            </div>
+
+            <p>파츠 강화는 기초 옵션 수치를 대폭 상승시키는 성장 시스템으로, <strong>최대 6단계(6강)</strong>까지 진행할 수 있습니다.</p>
+            <ul class="content-list">
+                <li><strong>성장 규칙:</strong> 1회 강화 성공 시 <strong>주 옵션</strong>과 <strong>부가 옵션 1종(무작위)</strong>의 수치가 함께
+                    증가합니다.</li>
+                <li><strong>강화 성공 단계 시스템:</strong> 강화를 시도할 때 (강화 버튼 클릭 시), 시스템 내부 확률에 의해 성공 단계가 총 5단계(일반/고급/희귀/영웅/전설) 중
+                    하나로 판정됩니다. 이 <strong>판정된 등급이 높을수록 추가 상승되는 스탯 수치의 폭이 커집니다.</strong>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <img src="image 1.png" alt="강화 수치 상승 연출 화면"
+                            style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+
+                    </div>
+
+                    <h4 id="sec-2-2-4-1" style="margin-top: 40px;">강화 성공 단계별 상승 수치표</h4>
+                    <table class="code-table" style="text-align: center;">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="text-align: center;">분류</th>
+                                <th rowspan="2" style="text-align: center;">옵션명</th>
+                                <th colspan="5" style="text-align: center;">강화 성공 단계별 상승 수치</th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: center;">일반</th>
+                                <th style="text-align: center;">고급</th>
+                                <th style="text-align: center;">희귀</th>
+                                <th style="text-align: center;">영웅</th>
+                                <th style="text-align: center;">전설</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 공통 옵션 -->
+                            <tr>
+                                <td rowspan="7" style="vertical-align: middle;">공통 옵션</td>
+                                <td style="text-align: left;">체력 30% 이하일 때 공격력 증가</td>
+                                <td>1.00%</td>
+                                <td>2.00%</td>
+                                <td>3.00%</td>
+                                <td>4.00%</td>
+                                <td>5.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">첫 타격 시 추가피해</td>
+                                <td>5.00%</td>
+                                <td>10.00%</td>
+                                <td>15.00%</td>
+                                <td>20.00%</td>
+                                <td>25.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">적 처치 시 3초간 랜덤 버프 획득<br>(공속, 이속, 공, 방 증가)</td>
+                                <td>0.50%</td>
+                                <td>1.00%</td>
+                                <td>1.50%</td>
+                                <td>1.75%</td>
+                                <td>2.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">보스 피해 증가</td>
+                                <td>0.30%</td>
+                                <td>0.55%</td>
+                                <td>0.80%</td>
+                                <td>1.05%</td>
+                                <td>1.30%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">파괴된 부위 공격 시 피해증가</td>
+                                <td>0.20%</td>
+                                <td>0.35%</td>
+                                <td>0.50%</td>
+                                <td>0.65%</td>
+                                <td>0.83%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">적 타격 시 스테미나 회복</td>
+                                <td>0.5</td>
+                                <td>1</td>
+                                <td>1.5</td>
+                                <td>1.75</td>
+                                <td>2</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">피격 시 경직 시간 감소</td>
+                                <td>0.20%</td>
+                                <td>0.35%</td>
+                                <td>0.50%</td>
+                                <td>0.65%</td>
+                                <td>0.83%</td>
+                            </tr>
+                            <!-- 특수 옵션 -->
+                            <tr>
+                                <td rowspan="9" style="vertical-align: middle;">특수 옵션</td>
+                                <td style="text-align: left;">최대 체력 증가</td>
+                                <td>3.00%</td>
+                                <td>5.00%</td>
+                                <td>7.00%</td>
+                                <td>10.00%</td>
+                                <td>15.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">방어력 증가</td>
+                                <td>0.30%</td>
+                                <td>0.55%</td>
+                                <td>0.80%</td>
+                                <td>1.05%</td>
+                                <td>1.30%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">스테미나 증가</td>
+                                <td>0.50%</td>
+                                <td>1.00%</td>
+                                <td>1.50%</td>
+                                <td>1.75%</td>
+                                <td>2.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">공격력 증가</td>
+                                <td>0.20%</td>
+                                <td>0.35%</td>
+                                <td>0.50%</td>
+                                <td>0.65%</td>
+                                <td>0.83%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">공격 속도 증가</td>
+                                <td>0.20%</td>
+                                <td>0.35%</td>
+                                <td>0.50%</td>
+                                <td>0.65%</td>
+                                <td>0.83%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">이동 속도 증가</td>
+                                <td>0.20%</td>
+                                <td>0.35%</td>
+                                <td>0.50%</td>
+                                <td>0.65%</td>
+                                <td>0.83%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">크리티컬 확률 증가</td>
+                                <td>0.30%</td>
+                                <td>0.55%</td>
+                                <td>0.80%</td>
+                                <td>1.05%</td>
+                                <td>1.30%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">크리티컬 데미지 증가</td>
+                                <td>0.25%</td>
+                                <td>0.50%</td>
+                                <td>0.75%</td>
+                                <td>1.00%</td>
+                                <td>1.25%</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">스테미나 회복 속도 증가</td>
+                                <td>0.10%</td>
+                                <td>0.20%</td>
+                                <td>0.30%</td>
+                                <td>0.40%</td>
+                                <td>0.50%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+                <li><strong>강화 재시도 (리스크 관리):</strong>
+                    <ul>
+                        <li>강화를 마친 후, 결과가 만족스럽지 않다면 <strong>파츠당 단 2회</strong>에 한해 결과를 되돌리고 재도전할 수 있습니다.</li>
+                        <li><strong>조건:</strong> 강화 재시도는 오직 <strong>현재 강화 단계의 직전 단계</strong>로만 덮어쓰기 복구가 가능합니다.</li>
+                        <li><em>예시) 현재 6강 상태에서 재도전 기회가 남은 경우: [5강 → 6강] 구간의 결과만 리롤할 수 있으며, 이미 확정된 [4강 → 5강] 구간의 결과를 재시도할
+                                수는 없습니다.</em></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="box box-warning">
+                <strong>강화 재시도 기회 소진 로직:</strong> 재도전 기회(2회)를 모두 소모한 파츠는 어떠한 경우에도 해당 구간의 강화를 다시 진행할 수 없도록 완전히 락(Lock)
+                처리되어야 하며, UI상에서 붉은색 텍스트 등으로 명확히 인지시켜야 합니다.
+            </div>
+
+            <div class="box box-info">
+                <strong>강화 재시도 시스템 기획 의도:</strong> 극심한 강화 확률 스트레스와 결과값 상실에 대한 저항감을 '재시도'라는 안전망을 통해 완화시킵니다. 이는 무/소과금 유저의
+                이탈을 방지하고 장기 리텐션을 유지하며, 추후 BM 상품으로서 '강화 횟수 초기화권' 등의 파생 상품을 자연스럽게 추가할 수 있는 구조적 틈을 만듭니다.
+            </div>
+            <h4 id="sec-2-2-5">2.2.5. 파츠 장착</h4>
+
+            <div class="mermaid"
+                style="background: var(--bg-panel); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center;">
+                graph TD
+                Start([파츠 장착 UI 진입]) --> SelectSlot[파츠 슬롯 선택]
+                QueryData[(tb_UserEquipParts <br /> 데이터 조회)] -.-> SelectSlot[파츠 슬롯 선택]
+
+                SelectSlot --> ShowInven[파츠 인벤토리 출력]
+                ShowInven --> SelectPart[장착할 파츠 선택]
+
+                SelectPart --> Cancel[취소 버튼 입력]
+                Cancel --> Start
+
+                SelectPart --> Confirm[확인 버튼 입력]
+                Confirm --> CheckEmpty{빈 슬롯?}
+
+                CheckEmpty -- "장착한 파츠 있음" --> Unequip[기존 장착된 파츠 해제]
+                CheckEmpty -- "장착한 파츠 없음" --> Equip[선택한 파츠 장착]
+
+                Unequip --> UpdateData[(tb_UserEquipParts <br />데이터 갱신)]
+                Equip --> UpdateData
+
+                UpdateData --> UpdateStat[능력치 갱신]
+                UpdateStat --> End([종료])
+
+                %% 스타일링
+                style Start fill:#fbc02d,stroke:#f9a825,color:#000
+                style End fill:#fbc02d,stroke:#f9a825,color:#000
+                style CheckEmpty fill:#fff9c4,stroke:#fbc02d,color:#000
+                style QueryData fill:#455a64,stroke:#263238,color:#fff
+                style UpdateData fill:#455a64,stroke:#263238,color:#fff
+                style Unequip fill:#ffebee,stroke:#ef5350,color:#c62828
+                style Equip fill:#e3f2fd,stroke:#42a5f5,color:#1565c0
+            </div>
+
+
+
+            <p>획득한 파츠를 무기의 전용 슬롯에 장착하여 성능을 활성화합니다. 각 슬롯은 고유한 타입을 가지며, 타입이 일치하는 파츠만 장착 가능합니다.</p>
+
+            <h5 id="sec-2-2-5-1"
+                style="margin-top: 15px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                2.2.5.1. 슬롯 구성 및 타입 제한</h5>
+            <table class="code-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">슬롯 타입</th>
+                        <th style="width: 25%;">장착 가능 파츠</th>
+                        <th>설명 및 특화 분야</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge rare">생명 슬롯</span></td>
+                        <td>생명 파츠</td>
+                        <td>생존 및 방어 성능에 특화된 파츠 장착 슬롯</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge epic">분노 슬롯</span></td>
+                        <td>분노 파츠</td>
+                        <td>공격력 및 파괴력에 특화된 파츠 장착 슬롯</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge legend">습격 슬롯</span></td>
+                        <td>습격 파츠</td>
+                        <td>치명타, 속도, 기동 성능에 특화된 파츠 장착 슬롯</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="box box-warning" style="margin-top: 15px;">
+                <strong>장착 적합성 예시:</strong>
+                <ul class="content-list" style="margin-top: 10px; margin-bottom: 0;">
+                    <li>✅ <strong>가능:</strong> 생명 슬롯 ← 생명 파츠 / 분노 슬롯 ← 분노 파츠</li>
+                    <li>❌ <strong>불가능:</strong> 생명 슬롯 ← 습격 파츠 / 분노 슬롯 ← 생명 파츠</li>
+                </ul>
+            </div>
+
+            <h5 id="sec-2-2-5-2"
+                style="margin-top: 25px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                2.2.5.2. 장착 규칙 및 조건</h5>
+            <table class="code-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">조건 항목</th>
+                        <th>상세 설명</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>슬롯 타입 일치</strong></td>
+                        <td>무기 슬롯의 타입과 파츠의 타입이 반드시 동일해야 장착이 가능합니다.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>보유 여부 확인</strong></td>
+                        <td>유저의 인벤토리에 실제로 존재하는 파츠여야 합니다.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>중복 장착 불가</strong></td>
+                        <td>하나의 파츠는 동시에 여러 슬롯에 장착될 수 없습니다. (교체 장착은 가능)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>잠금 파츠 지원</strong></td>
+                        <td>유저가 잠금(Lock) 처리한 파츠도 장착 및 해제가 가능합니다. (실수 방지용)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="box box-warning" style="margin-top: 15px;">
+                <strong>장착 불가(제한) 케이스:</strong>
+                <ul class="content-list" style="margin-top: 10px; margin-bottom: 0;">
+                    <li>타입 불일치 시 장착 버튼 비활성화 및 알림 출력</li>
+                    <li>존재하지 않거나 데이터상 삭제된 파츠는 목록에서 제외</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3. UI/UX (Layout Only) -->
+        <section class="card" id="sec-3">
+            <h2 class="section-title">3. UI/UX 와이어프레임</h2>
+
+
+            <h3 class="sub-title" id="sec-3-1">3.1. 장착 및 관리 인벤토리 UI</h3>
+            <h4 id="sec-3-1-1" style="margin-top: 20px;">3.1.1. 인벤토리 - 파츠</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="inven_parts_UI.png" alt="인벤토리 - 파츠 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 인벤토리 - 파츠 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-1-1-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>타이틀</strong><br>
+                                    - 텍스트<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; "인벤토리"<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_Menu, $Name</code></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>인벤토리 탭 메뉴</strong><br>
+                                    - 인벤토리 카테고리별 탭 버튼을 제공<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 탭 종류: 무기 탭, 코어 탭, 파츠 탭<br>
+                                    - 현재 선택된 탭은 활성화 상태로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 선택된 탭 아이콘 강조<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 배경색: #000000<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 아이콘 색상: #fff196<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 비선택 탭은 기본 색상 유지</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>나가기</strong><br>
+                                    - 인벤토리 화면을 종료합니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 선택 시 이전 화면으로 이동<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 단축키 ESC 입력 시 동일 기능 수행</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>장착 파츠 정보</strong><br>
+                                    - 현재 장착 중인 파츠 정보를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 슬롯 아래에 슬롯 이름 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_PartsType, $Name</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #000000<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; Bold체<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 가운데 정렬<br>
+                                    - 슬롯별 장착된 파츠 아이콘을 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착한 파츠의 등급에 따른 배경 색상 적용<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 일반: #d0cece<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 고급: #a9d18e<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 희귀: #8faadc<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 영웅: #7030a0<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 전설: #ffc000<br>
+                                    - 슬롯을 클릭하여 작동 시, 3.1.2 화면으로 전환
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>파츠 주 옵션 정보</strong><br>
+                                    - 현재 장착된 파츠들의 주옵션 정보를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션명 좌측 정렬<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 최대 12글자까지 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션명이 12글자 이상이여서 설명이 잘릴 경우<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 마우스 오버
+                                    시(길게 터치 시) 해당 옵션명을 툴팁으로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_PartsOption, $Name</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션 수치 우측 정렬
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">6</td>
+                                <td><strong>파츠 부가 옵션 정보</strong><br>
+                                    - 현재 장착된 파츠들의 부가 옵션 정보를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션명 좌측 정렬<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 최대 12글자까지 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션명이 12글자 이상이여서 설명이 잘릴 경우<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 마우스 오버
+                                    시(길게 터치 시) 해당 옵션명을 툴팁으로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_PartsOption, $Name</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션 수치 우측 정렬
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">7</td>
+                                <td><strong>플레이 캐릭터 표시</strong><br>
+                                    - 현재 장착 중인 캐릭터 모델을 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 캐릭터 대기 모션 출력 가능</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h4 id="sec-3-1-2" style="margin-top: 20px;">3.1.2. 파츠 교체</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="inven_parts_change_UI.png" alt="파츠 교체 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 파츠 교체 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-1-2-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>현재 장착 파츠 정보</strong><br>
+                                    - 현재 슬롯에 장착 중인 파츠 정보를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착 파츠 아이콘 표시: <code>tb_Item, $IconPath</code><br>
+                                    - 현재 장착된 파츠의 주 옵션 정보를 출력<br>
+                                    - 현재 장착된 파츠의 부가 옵션 정보를 출력</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>선택 파츠 정보</strong><br>
+                                    - 인벤토리에서 선택한 파츠 정보를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착 파츠 아이콘 표시: <code>tb_Item, $IconPath</code><br>
+                                    - 현재 장착된 파츠의 주 옵션 정보를 출력<br>
+                                    - 현재 장착된 파츠의 부가 옵션 정보를 출력<br>
+                                    - 유저가 인벤토리에서 선택한 파츠가 없을 경우<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 선택 파츠 정보를 표시하지 않음 (비활성화 처리)</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>파츠 인벤토리</strong><br>
+                                    - 유저가 보유 중인 파츠 목록을 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 해당 슬롯과 동일한 타입을 가진 파츠만 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 그리드 형태로 출력: 4열<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 상하 스크롤 지원<br>
+                                    - 파츠 등급에 따라 배경 색상 적용<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 일반: #d0cece<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 고급: #a9d18e<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 희귀: #8faadc<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 영웅: #7030a0<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 전설: #ffc000<br>
+                                    - 선택된 파츠는 강조 테두리를 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 테두리 색상: #0000ff<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 테두리 두께: 2px<br>
+                                    - 인벤토리 정렬 우선순위<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착 중인 파츠 &rarr; 등급</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>취소 버튼</strong><br>
+                                    - 작동 시, "선택 파츠 정보"를 비활성화</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>확인 버튼</strong><br>
+                                    - 작동 시, 현재 슬롯에 장착 중인 파츠를 선택한 파츠로 교체<br>
+                                    - 위 인벤토리 정렬 우선순위에 맞게 재정렬</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="sub-title" id="sec-3-2">3.2. 상점 가챠 연출 및 결과창 UI</h3>
+            <h4 id="sec-3-2-1" style="margin-top: 20px;">3.2.1. 파츠 상자 구매</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="parts_pickup_UI.png" alt="상점 가챠 연출 및 결과창 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 상점 뽑기 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-2-1-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>타이틀</strong><br>
+                                    - 텍스트<br>
+                                    &gt; "장비 제작"<br>
+                                    &gt; <code>tb_Menu, $Name</code></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>카테고리 네비게이션</strong><br>
+                                    - 작동 시 선택한 UI로 진입<br><br>
+                                    - 현재 진입 중인 카테고리는 아래 규칙에 따라 탭을 강조<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 배경 색상: #000000<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 아이콘 색상: #fff196<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #fff196<br><br>
+                                    - 비활성화 카테고리는 아래 규칙에 따라 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 배경 색상: alpha 값: 0<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 아이콘 색상: #e7e6e6<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #000000</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>나가기</strong><br>
+                                    - 대기 상태로 이동</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>보유 화폐</strong><br>
+                                    - 유저가 보유 중인, 파츠 뽑기권 관련 재화 출력<br>
+                                    &gt; <code>tb_Currency, $IconPath</code><br>
+                                    &gt; 숫자 우측정렬<br>
+                                    &gt; 출력되어야할 재화 종류<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 무기 파츠 뽑기권<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 생명의 파츠 뽑기권<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 분노의 파츠 뽑기권<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 습격의 파츠 뽑기권<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 골드</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>상단 탭</strong><br>
+                                    - 탭 클릭 시 해당 기능 화면으로 전환<br>
+                                    - 선택된 탭은 활성화 상태로 유지<br>
+                                    - 활성화 탭은 아래 규칙에 따라 탭을 강조<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 배경 색상: #000000<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #fff196<br>
+                                    - 현재 화면에 해당하는 탭은 중복 클릭 시 상태 변화 없음</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">6</td>
+                                <td><strong>무기 파츠 상자 1회 열기</strong><br>
+                                    - 무기 파치 열기 1회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 1회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 모든 종류의 파츠 등장 (생명, 분노, 습격)<br>
+                                    &gt; 확률: 33.33%(분노,습격), 33.34%(생명)</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">7</td>
+                                <td><strong>요구 재화</strong><br>
+                                    - 상자를 열기 위한 재화 표시<br>
+                                    &gt; 아이콘: <code>tb_Currency, $IconPath</code><br>
+                                    &gt; 재화 수량: <code>tb_PartsBox, $Requirement</code></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">8</td>
+                                <td><strong>생명의 상자 1회 열기</strong><br>
+                                    - 생명의 상자 열기 1회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 1회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 생명의 파츠만 등장</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">9</td>
+                                <td><strong>분노의 상자 1회 열기</strong><br>
+                                    - 분노의 상자 열기 1회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 1회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 분노의 파츠만 등장</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">10</td>
+                                <td><strong>습격의 상자 1회 열기</strong><br>
+                                    - 습격의 상자 열기 1회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 1회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 습격의 파츠만 등장</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">11</td>
+                                <td><strong>무기 파츠 상자 10회 열기</strong><br>
+                                    - 무기 파치 뽑기 10회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 10회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 모든 종류의 파츠 등장 (생명, 분노, 습격)<br>
+                                    &gt; 확률: 33.33%(분노,습격), 33.34%(생명)</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">12</td>
+                                <td><strong>생명의 상자 10회 열기</strong><br>
+                                    - 생명의 상자 열기 10회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 10회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 생명의 파츠만 등장</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">13</td>
+                                <td><strong>분노의 상자 10회 열기</strong><br>
+                                    - 분노의 상자 열기 10회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 10회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 분노의 파츠만 등장</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">14</td>
+                                <td><strong>습격의 상자 10회 열기</strong><br>
+                                    - 습격의 상자 열기 1회 시행버튼<br>
+                                    - 작동 시, 00 팝업 메시지 출력<br>
+                                    &gt; 해당 팝업의 "확인" 버튼 작동 시 10회 뽑기 시행<br>
+                                    &gt; 작동 시, 파츠 뽑기 전용 재화 소모<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Requirement</code><br>
+                                    - 자원 부족한 경우, 00 팝업 메시지 출력<br><br>
+                                    - 습격의 파츠만 등장</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 40px 0; opacity: 0.5;">
+
+            <h4 id="sec-3-2-2" style="margin-top: 20px;">3.2.2. 구매 팝업</h4>
+            <h5 id="sec-3-2-2-1"
+                style="margin-top: 15px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                3.2.2.1. 뽑기 진행 확인 팝업</h5>
+            <div style="position: relative; margin-top: 15px;">
+                <!-- 상단 고정 이미지 영역: 스크롤 시 3.2.2.2 섹션 전까지 상단에 고정됨 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 10px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="pickup_popup_UI.png" alt="뽑기 진행 확인 팝업 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.8rem; font-weight: bold;">
+                            [참조: 뽑기 진행 확인 팝업 (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-2-2-1-1" style="font-size: 1.1rem; color: var(--text-bright);">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>뽑기 진행 팝업</strong><br>
+                                    - 뽑기 실행 시, 뽑기 실행 확인 여부를 묻는 팝업 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 의도하지 않은 입력으로 인한 실수 방지<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 행동 수행 전 결과를 명확히 인지<br>
+                                    - 화면 중앙에 출력</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>팝업 제목</strong><br>
+                                    - 가운데 정렬</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>팝업 설명</strong><br>
+                                    - {0}: 소모될 재화 수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Price</code><br>
+                                    - {n}: 유저가 열 상자의 개수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Amount</code><br>
+                                    - {1}: 유저가 선택한 상자의 종류<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Type</code><br><br>
+                                    - 가운데 정렬</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>취소 버튼</strong><br>
+                                    - 팝업 닫기 버튼</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>확인 버튼</strong><br>
+                                    - 뽑기 실행<br>
+                                    - 연출 화면 전환</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h5 id="sec-3-2-2-2"
+                style="margin-top: 15px; color: var(--accent-primary); border-left: 3px solid var(--accent-primary); padding-left: 10px;">
+                3.2.2.2. 재화 부족 팝업</h5>
+            <div style="position: relative; margin-top: 15px;">
+                <!-- 상단 고정 이미지 영역: 스크롤 시 3.2.3 섹션 전까지 상단에 고정됨 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 10px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="pickup_currency_alter_UI.png" alt="재화 부족 팝업 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.8rem; font-weight: bold;">
+                            [참조: 재화 부족 팝업 (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-2-2-2-1" style="font-size: 1.1rem; color: var(--text-bright);">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>재화 부족 팝업</strong><br>
+                                    - 뽑기 실행 시, 재화(뽑기권)이 부족한 경우 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 유저가 재화 부족으로 인해 구매 이탈을 방지하기 위한 팝업<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 재화를 살 골드 부족 시 골드 구매 창으로 전환하여, 골드 구매를 유도하기 위함<br>
+                                    - 화면 중앙에 출력</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>팝업 제목</strong><br>
+                                    - 가운데 정렬</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>팝업 설명</strong><br>
+                                    - {0}: 소모될 재화(뽑기권) 수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Price</code><br>
+                                    - {n}: 부족한 재화의 수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 상자 구매를 위한 재화 - 현재 유저가 보유 중인 재화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsBox, $Amount</code><br>
+                                    - {1}: 뽑기권 구매 비용<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_Currency, $Price</code><br><br>
+                                    - 가운데 정렬</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>취소 버튼</strong><br>
+                                    - 팝업 닫기 버튼</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>확인 버튼</strong><br>
+                                    - 구매 확인 버튼<br>
+                                    1. 보유한 골드 &gt;= 필요 골드<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 재화 구매 후, 뽑기 연출 화면 전환<br><br>
+                                    2. 보유한 골드 &lt; 필요 골드<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 골드 구매 화면 전환</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 40px 0; opacity: 0.5;">
+
+            <h4 id="sec-3-2-3" style="margin-top: 20px;">3.2.3. 결과 창</h4>
+            <p><em>(내용 작성 예정 - 빈 섹션)</em></p>
+
+            <h3 class="sub-title" id="sec-3-3">3.3. 파츠 강화 및 성공/실패 연출 UX</h3>
+            <h4 id="sec-3-3-1" style="margin-top: 20px;">3.3.1. 파츠 강화</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="parts_enforce_UI.png" alt="파츠 강화 및 성공/실패 연출 UX" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 파츠 강화 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-3-1-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>보유 화폐</strong><br>
+                                    - 유저가 보유 중인, 파츠 강화 재료 관련 재화 출력<br>
+                                    &gt; <code>tb_Currency, $IconPath</code><br>
+                                    &gt; 숫자 우측정렬<br>
+                                    &gt; 출력되어야할 재화 종류<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 마정 가루<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 마정석<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;- 골드</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>아이템 표시 드롭다운</strong><br>
+                                    - 리스트에 표시될 기준을 설정<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 전체: 유저가 보유중인 파츠 정보를 불러옵니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착 중인 아이템: 유저가 보유중인 파츠 중 장착하고 있는 파츠의 정보만을 불러옵니다.</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>아이템 리스트</strong><br>
+                                    - 플레이어가 보유중인 파츠의 정보 출력<br>
+                                    - 아이템 표시 드롭다운의 조건에 따라 정보를 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 전체: 유저가 보유중인 파츠 정보를 불러옵니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 장착 중인 아이템: 유저가 보유중인 파츠 중 장착하고 있는 파츠의 정보만을
+                                    불러옵니다.<br><br>
+                                    - 리스트 정렬 기준<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 공통: 아이템 인덱스를 기준으로 오름차순 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 전체: 유저가 장착중인 파츠 → 보유중인 파츠 순서로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 인덱스가 동일할 경우, 옵션의 인덱스에 기준에 따라 오름차순 출력<br><br>
+                                    - 리스트 아이템 정보<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_Item, $IconPath, $Name, $enforce, $RetryCount</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 강화 재시도 횟수(<code>$RetryCount</code>)에 따라 재시도 남은 횟수 표시
+                                    강조<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 남은 횟수 만큼 #00ff00 색으로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 소모된 횟수 만큼 #d0cece 색으로 표시
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>선택한 파츠 정보 출력</strong><br>
+                                    - 아이템 정보<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_Item, $IconPath, $Name, $enforce, $Option(1,2,3)</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">5</td>
+                                <td><strong>강화 재화</strong><br>
+                                    - 강화에 필요한 재화 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_Item, $IconPath</code><br><br>
+                                    - 필요 재화 수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 아이템 아이콘 하단부에 표시 (가운데 정렬)<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_PartsEnhance, $DemonicDust, $DemonicCrystal, $Gold</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 현재 선택된 파츠의 강화단계를 참조하여 테이블에서 값을 가져옵니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 재화가 부족할 경우 텍스트 색을 #ff0000로 변경하여 강조
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">6</td>
+                                <td><strong>강화 버튼</strong><br>
+                                    - 작동 시, 강화 연출 진행<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 강화 성공 단계를 서버에서 계산 후 클라이언트로 결과 전달<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 유저 보유 재화를 요구 재화만큼 차감<br><br>
+                                    - 유저 보유한 재화 &lt; 요구 재화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 비활성화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 색상: #d0cece<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #000000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h4 id="sec-3-3-2" style="margin-top: 20px;">3.3.2. 파츠 재강화</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="parts_re-strengthen_UI.png" alt="파츠 재강화 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 파츠 재강화 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-3-2-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>남은 재시도 횟수</strong><br>
+                                    - 현재 선택한 파츠의 남은 재시도 횟수를 출력</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>현재 단계에서 적용된 강화 수치</strong><br>
+                                    - 현재 선택한 파츠의 강화 단계에서 적용 중인 옵션 증가 수치를 출력합니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 강화 단계에 따라 증가된 옵션 수치를 리스트 형태로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 표시 대상: 공격력, 공격 속도, 이동 속도 등 현재 파츠에 적용된 옵션<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 증가 수치는 % 단위로 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 증가된 수치는 우측 정렬하여 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 상승 적용 중인 수치는 강조 색상 적용 (#ff8a00)<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 옵션 수치 정보는 현재 선택된 파츠의 강화 단계 데이터를 참조<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_PartsOption</code> 테이블에서 현재 강화 단계의 증가 수치 데이터를
+                                    가져옵니다.</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>강화 재화</strong><br>
+                                    - 강화에 필요한 재화 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; <code>tb_Item, $IconPath</code><br><br>
+                                    - 필요 재화 수<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 아이템 아이콘 하단부에 표시 (가운데 정렬)<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt;
+                                    <code>tb_PartsEnhance, $DemonicDust, $DemonicCrystal, $Gold</code><br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 현재 선택된 파츠의 강화단계를 참조하여 테이블에서 값을 가져옵니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 재화가 부족할 경우 텍스트 색을 #ff0000로 변경하여 강조
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">4</td>
+                                <td><strong>강화 버튼</strong><br>
+                                    - 작동 시, 강화 연출 진행<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 강화 성공 단계를 서버에서 계산 후 클라이언트로 결과 전달<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 유저 보유 재화를 요구 재화만큼 차감<br><br>
+                                    - 유저 보유한 재화 &lt; 요구 재화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 비활성화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 색상: #d0cece<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #000000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 40px 0; opacity: 0.5;">
+
+            <h4 id="sec-3-3-3" style="margin-top: 20px;">3.3.3. 파츠 강화 결과창</h4>
+            <div style="position: relative; margin-top: 20px;">
+                <!-- 상단 고정 이미지 영역 -->
+                <div
+                    style="position: sticky; top: 0; z-index: 100; background-color: var(--bg-panel); padding: 15px 0; border-bottom: 2px solid var(--accent-primary); margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <img src="enforce_result_UI.png" alt="파츠 강화 결과창 UI" class="zoom-img"
+                            style="max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <p
+                            style="margin-top: 10px; color: var(--accent-primary); font-size: 0.85rem; font-weight: bold;">
+                            [참조: 파츠 강화 결과창 UI (마우스 오버 시 확대)]</p>
+                    </div>
+                </div>
+
+                <!-- 상세 설명 테이블 영역 -->
+                <div style="margin-top: 10px;">
+                    <h4 id="sec-3-3-3-1">UI 상세 설명</h4>
+                    <table class="code-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center;">번호</th>
+                                <th>설명 및 기능 정의</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td><strong>강화 대상 정보</strong><br>
+                                    - 강화가 진행된 파츠 정보를 출력합니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 파츠 아이콘 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 파츠 이름 출력<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 강화 완료 단계 출력</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">2</td>
+                                <td><strong>강화 결과 상태</strong><br>
+                                    - 강화 결과 메시지를 중앙에 출력합니다.<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 결과 상태에 따라 연출 및 텍스트 색상 변경<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; "강화 성공" 배경: 강화 성공 단계별 등급과 동일한
+                                    색상으로 표시<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; 증가 수치 텍스트: 강화 성공 단계별 등급과 동일한
+                                    색상으로 표시</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">3</td>
+                                <td><strong>확인 버튼</strong><br>
+                                    - 강화 결과 화면을 종료<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 선택 시 이전 강화 화면으로 이동<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 결과 연출 종료 후 입력 가능 상태로 변경<br><br>
+                                    - 결과 연출 진행 중에는 비활성화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 연출 종료 후 버튼 활성화<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 버튼 색상: #000000<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&gt; 텍스트 색상: #ffffff</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 테이블 (Data Layout Only) -->
+        <section class="card" id="sec-4">
+            <h2 class="section-title">4. 데이터 테이블 구조 (Data Table)</h2>
+            <div class="box box-warning">
+                데이터베이스 및 테이블 스키마 구조 레이아웃입니다. 세부 수치 기입은 밸런스 기획안 확정 후 별도의 연동 시트를 통해 프로그래밍 팀에 전달됩니다.
+            </div>
+
+            <h3 class="sub-title" id="sec-4-1">4.1. 테이블 관계도</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+erDiagram
+    tb_Parts ||--o| tb_PartsOptionGroup : "Option Group"
+    tb_Parts ||--o{ tb_PartsEnhance : "Enhance Data"
+    tb_PartsOptionGroup ||--o{ tb_PartsMainOption : "Main Options"
+    tb_PartsOptionGroup ||--o{ tb_PartsSubOption : "Sub Options"
+    tb_PartsMainOption ||--|| tb_PartsOption : "Reference"
+    tb_PartsSubOption ||--|| tb_PartsOption : "Reference"
+    tb_UserParts ||--o{ tb_UserPartsOption : "Options"
+    tb_UserPartsOption ||--|| tb_PartsOption : "Reference"
+    tb_UserParts ||--o| tb_UserEquipParts : "Equip State"
+    tb_UserInventory ||--|| tb_Item : "Item Link"
+    tb_UserParts }|--|| tb_Parts : "Instance of"
+
+    tb_Parts {
+        int PartsID PK
+        varchar PartsName
+        tinyint PartsType
+        tinyint Grade
+        varchar IconPath
+        int MainOptionGroupID FK
+        int SubOptionGroupID FK
+        int MaxEnhance
+        int SellGold
+        boolean IsActive
+    }
+
+    tb_PartsOptionGroup {
+        int OptionGroupID PK
+        tinyint GroupType
+        tinyint PartsType
+    }
+
+    tb_PartsOption {
+        int OptionID PK
+        varchar OptionName
+        tinyint OptionType
+        enum OptionGrade
+        varchar Desc
+        boolean IsActive
+    }
+
+    tb_PartsMainOption {
+        int ID PK
+        int OptionGroupID FK
+        int OptionID FK
+        tinyint OptionGrade
+    }
+
+    tb_PartsSubOption {
+        int ID PK
+        int OptionGroupID FK
+        int OptionID FK
+        tinyint OptionGrade
+    }
+
+    tb_PartsEnhance {
+        int EnhanceLevel PK
+        int DemonicDust
+        int DemonicCrystal
+        int Gold
+        int SuccessLevel
+        int RetryCount
+    }
+
+    tb_Item {
+        int ItemID PK
+        varchar ItemName
+        tinyint ItemType
+        varchar IconPath
+        tinyint Grade
+    }
+
+    tb_UserParts {
+        long UserPartsID PK
+        long UserID FK
+        int PartsID FK
+        int EnhanceLevel
+        int RetryCount
+        boolean IsLocked
+        datetime CreatedAt
+    }
+
+    tb_UserPartsOption {
+        long UserPartsOptionID PK
+        long UserPartsID FK
+        int OptionID FK
+        float OptionValue
+        boolean IsMain
+    }
+
+    tb_UserInventory {
+        long UserID PK
+        int ItemID PK, FK
+        long Count
+    }
+
+    tb_UserEquipParts {
+        long UserID PK
+        long CharacterID PK
+        long LifePartsID FK
+        long RagePartsID FK
+        long AssaultPartsID FK
+    }
+                </pre>
+            </div>
+
+            <h3 class="sub-title" id="sec-4-2">4.2. 테이블 상세 정의</h3>
+            <div id="sec-4-2-group">
+                <h4 id="sec-4-2-1" style="margin-top: 20px;">4.2.1. 파츠 정보 (tb_Parts)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약사항</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PartsID</td>
+                                <td>INT</td>
+                                <td>파츠 고유 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>PartsName</td>
+                                <td>VARCHAR(16)</td>
+                                <td>파츠 이름</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>PartsType</td>
+                                <td>TINYINT</td>
+                                <td>1: 생명, 2: 분노, 3: 습격</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>Grade</td>
+                                <td>TINYINT</td>
+                                <td>1: 일반, 2: 고급, 3: 희귀, 4: 영웅, 5: 전설</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>IconPath</td>
+                                <td>VARCHAR(300)</td>
+                                <td>아이콘 경로</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>MainOptionGroupID</td>
+                                <td>INT</td>
+                                <td>주 옵션 그룹 ID</td>
+                                <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+                            </tr>
+                            <tr>
+                                <td>SubOptionGroupID</td>
+                                <td>INT</td>
+                                <td>부가 옵션 그룹 ID</td>
+                                <td>FK(tb_PartsOptionGroup.OptionGroupID)</td>
+                            </tr>
+                            <tr>
+                                <td>MaxEnhance</td>
+                                <td>INT</td>
+                                <td>최대 강화 단계</td>
+                                <td>NOT NULL, DEFAULT 6</td>
+                            </tr>
+                            <tr>
+                                <td>SellGold</td>
+                                <td>INT</td>
+                                <td>판매 가격</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>IsActive</td>
+                                <td>BOOLEAN</td>
+                                <td>사용 여부</td>
+                                <td>NOT NULL, DEFAULT TRUE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-2" style="margin-top: 20px;">4.2.2. 파츠 옵션 그룹 (tb_PartsOptionGroup)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>OptionGroupID (PK)</td>
+                                <td>INT</td>
+                                <td>옵션 그룹 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>GroupType</td>
+                                <td>TINYINT</td>
+                                <td>1: Main, 2: Sub</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>PartsType</td>
+                                <td>TINYINT</td>
+                                <td>1: 생명, 2: 분노, 3: 습격</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-3" style="margin-top: 20px;">4.2.3. 파츠 옵션 (tb_PartsOption)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>OptionID (PK)</td>
+                                <td>INT</td>
+                                <td>옵션 ID</td>
+                                <td>PK, AUTO_INCREMENT, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>OptionName</td>
+                                <td>VARCHAR(16)</td>
+                                <td>옵션 이름</td>
+                                <td>NOT NULL, UNIQUE</td>
+                            </tr>
+                            <tr>
+                                <td>OptionType</td>
+                                <td>TINYINT</td>
+                                <td>1: Normal, 2: Special</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>OptionGrade</td>
+                                <td>ENUM</td>
+                                <td>1: 희귀, 2: 영웅, 3: 전설</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>Desc</td>
+                                <td>VARCHAR(300)</td>
+                                <td>옵션 설명</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>IsActive</td>
+                                <td>BOOLEAN</td>
+                                <td>사용 여부</td>
+                                <td>NOT NULL, DEFAULT TRUE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-4" style="margin-top: 20px;">4.2.4. 파츠 주 옵션 (tb_PartsMainOption)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ID (PK)</td>
+                                <td>INT</td>
+                                <td>고유값</td>
+                                <td>PK, AUTO_INCREMENT, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>OptionGroupID (FK)</td>
+                                <td>INT</td>
+                                <td>옵션 그룹</td>
+                                <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionID (FK)</td>
+                                <td>INT</td>
+                                <td>옵션 ID</td>
+                                <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionGrade</td>
+                                <td>TINYINT</td>
+                                <td>1: 희귀, 2: 영웅, 3: 전설</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-5" style="margin-top: 20px;">4.2.5. 파츠 부가 옵션 (tb_PartsSubOption)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ID (PK)</td>
+                                <td>INT</td>
+                                <td>고유값</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>OptionGroupID (FK)</td>
+                                <td>INT</td>
+                                <td>옵션 그룹</td>
+                                <td>NOT NULL, FK(tb_PartsOptionGroup.OptionGroupID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionID (FK)</td>
+                                <td>INT</td>
+                                <td>옵션 ID</td>
+                                <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionGrade</td>
+                                <td>TINYINT</td>
+                                <td>1: 희귀, 2: 영웅, 3: 전설</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-6" style="margin-top: 20px;">4.2.6. 파츠 강화 (tb_PartsEnhance)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>EnhanceLevel (PK)</td>
+                                <td>INT</td>
+                                <td>강화 단계</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>DemonicDust</td>
+                                <td>INT</td>
+                                <td>필요 가루</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>DemonicCrystal</td>
+                                <td>INT</td>
+                                <td>필요 결정</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>Gold</td>
+                                <td>INT</td>
+                                <td>필요 골드</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>SuccessLevel</td>
+                                <td>INT</td>
+                                <td>강화 성공 단계</td>
+                                <td>NOT NULL, DEFAULT 1</td>
+                            </tr>
+                            <tr>
+                                <td>RetryCount</td>
+                                <td>INT</td>
+                                <td>재시도 가능 횟수</td>
+                                <td>NOT NULL, DEFAULT 2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-7" style="margin-top: 20px;">4.2.7. 아이템 테이블 (tb_Item)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ItemID (PK)</td>
+                                <td>INT</td>
+                                <td>아이템 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>ItemName</td>
+                                <td>VARCHAR(16)</td>
+                                <td>이름</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>ItemType</td>
+                                <td>TINYINT</td>
+                                <td>재화 / 파츠 / 재료</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>IconPath</td>
+                                <td>VARCHAR(300)</td>
+                                <td>아이콘</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>Grade</td>
+                                <td>TINYINT</td>
+                                <td>등급</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-8" style="margin-top: 20px;">4.2.8. 유저 파츠 (tb_UserParts)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>UserPartsID (PK)</td>
+                                <td>LONG</td>
+                                <td>유저 파츠 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>UserID</td>
+                                <td>LONG</td>
+                                <td>유저 ID</td>
+                                <td>FK(tb_User.UserID)</td>
+                            </tr>
+                            <tr>
+                                <td>PartsID (FK)</td>
+                                <td>INT</td>
+                                <td>파츠 원본 ID</td>
+                                <td>NOT NULL, FK(tb_Parts.PartsID)</td>
+                            </tr>
+                            <tr>
+                                <td>EnhanceLevel</td>
+                                <td>INT</td>
+                                <td>강화 단계</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>RetryCount</td>
+                                <td>INT</td>
+                                <td>남은 재시도</td>
+                                <td>NOT NULL, DEFAULT 0</td>
+                            </tr>
+                            <tr>
+                                <td>IsLocked</td>
+                                <td>BOOLEAN</td>
+                                <td>잠금 여부</td>
+                                <td>NOT NULL, DEFAULT FALSE</td>
+                            </tr>
+                            <tr>
+                                <td>CreatedAt</td>
+                                <td>DATETIME</td>
+                                <td>획득 시간</td>
+                                <td>NOT NULL, DEFAULT CURRENT_TIMESTAMP</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-9" style="margin-top: 20px;">4.2.9. 유저 파츠 옵션 (tb_UserPartsOption)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>UserPartsOptionID (PK)</td>
+                                <td>LONG</td>
+                                <td>고유 ID</td>
+                                <td>PK, AUTO_INCREMENT, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>UserPartsID (FK)</td>
+                                <td>LONG</td>
+                                <td>유저 파츠</td>
+                                <td>NOT NULL, FK(tb_UserParts.UserPartsID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionID (FK)</td>
+                                <td>INT</td>
+                                <td>옵션</td>
+                                <td>NOT NULL, FK(tb_PartsOption.OptionID)</td>
+                            </tr>
+                            <tr>
+                                <td>OptionValue</td>
+                                <td>FLOAT</td>
+                                <td>실제 수치</td>
+                                <td>NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>IsMain</td>
+                                <td>BOOLEAN</td>
+                                <td>주 옵션 여부</td>
+                                <td>NOT NULL, DEFAULT FALSE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-10" style="margin-top: 20px;">4.2.10. 유저 인벤토리 (tb_UserInventory)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>UserID</td>
+                                <td>LONG</td>
+                                <td>유저 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>ItemID</td>
+                                <td>INT</td>
+                                <td>아이템 ID</td>
+                                <td>PK, NOT NULL, FK(tb_Item.ItemID)</td>
+                            </tr>
+                            <tr>
+                                <td>Count</td>
+                                <td>LONG</td>
+                                <td>보유 수량</td>
+                                <td>NOT NULL, DEFAULT 0, CHECK(Count &gt;= 0)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-11" style="margin-top: 20px;">4.2.11. 유저 장착 파츠 (tb_UserEquipParts)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>컬럼명</th>
+                                <th>타입</th>
+                                <th>설명</th>
+                                <th>제약조건</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>UserID</td>
+                                <td>LONG</td>
+                                <td>유저 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>CharacterID</td>
+                                <td>LONG</td>
+                                <td>캐릭터 ID</td>
+                                <td>PK, NOT NULL</td>
+                            </tr>
+                            <tr>
+                                <td>LifePartsID</td>
+                                <td>LONG</td>
+                                <td>생명 파츠</td>
+                                <td>FK(tb_UserParts.UserPartsID)</td>
+                            </tr>
+                            <tr>
+                                <td>RagePartsID</td>
+                                <td>LONG</td>
+                                <td>분노 파츠</td>
+                                <td>FK(tb_UserParts.UserPartsID)</td>
+                            </tr>
+                            <tr>
+                                <td>AssaultPartsID</td>
+                                <td>LONG</td>
+                                <td>습격 파츠</td>
+                                <td>FK(tb_UserParts.UserPartsID)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-12" style="margin-top: 20px;">4.2.12. 파츠 타입 정보 (tb_PartsType)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table cols-3">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>PartsType</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>LIFE</td>
+                                <td>생명</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>RAGE</td>
+                                <td>분노</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>ASSAULT</td>
+                                <td>습격</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-13" style="margin-top: 20px;">4.2.13. 등급 정보 (tb_Grade)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table cols-3">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>Grade</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>NORMAL</td>
+                                <td>일반</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>ADVANCED</td>
+                                <td>고급</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>RARE</td>
+                                <td>희귀</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>EPIC</td>
+                                <td>영웅</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>LEGENDARY</td>
+                                <td>전설</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-14" style="margin-top: 20px;">4.2.14. 그룹 타입 정보 (tb_GroupType)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table cols-3">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>GroupType</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Main</td>
+                                <td>주 옵션</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Sub</td>
+                                <td>부가 옵션</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 id="sec-4-2-15" style="margin-top: 20px;">4.2.15. 옵션 등급 정보 (tb_OptionGrade)</h4>
+                <div style="margin-top: 10px;">
+                    <table class="code-table cols-3">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>Grade</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>RARE</td>
+                                <td>희귀</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>EPIC</td>
+                                <td>영웅</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>LEGENDARY</td>
+                                <td>전설</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 목차 앵커 이동 부드럽게 처리하는 최소 JS 스크립트 -->
+    <script>
+        document.querySelectorAll('nav.toc a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 30, // 헤더 여백 고려
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
