@@ -535,10 +535,75 @@
             position: relative;
             z-index: 1000;
         }
+
+        /* --- 반응형 목차 (TOC) 추가 스타일 --- */
+        .toc-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background-color: var(--bg-panel);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+
+        .toc-toggle:hover {
+            background-color: var(--accent-primary);
+            color: var(--bg-base);
+        }
+
+        .toc-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+        }
+
+        @media (max-width: 1100px) {
+            .toc-toggle {
+                display: block;
+            }
+
+            nav.toc {
+                left: -280px;
+                transition: left 0.3s ease-in-out;
+                z-index: 1000;
+                box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            }
+
+            nav.toc.active {
+                left: 0;
+            }
+
+            main.content {
+                margin-left: 0;
+                padding: 80px 20px 40px 20px;
+            }
+
+            .toc-overlay.active {
+                display: block;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- 반응형 TOC 토글 버튼 및 오버레이 -->
+    <button id="toc-toggle" class="toc-toggle" aria-label="목차 열기/닫기">☰</button>
+    <div id="toc-overlay" class="toc-overlay"></div>
 
     <!-- 좌측 TOC (Table of Contents) -->
     <nav class="toc">
@@ -2921,18 +2986,42 @@ erDiagram
 
     </main>
 
-    <!-- 목차 앵커 이동 부드럽게 처리하는 최소 JS 스크립트 -->
     <script>
-        document.querySelectorAll('nav.toc a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href').substring(1);
-                const targetElement = document.getElementById(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 30, // 헤더 여백 고려
-                        behavior: 'smooth'
-                    });
+        // TOC 토글 로직
+        const toc = document.querySelector('nav.toc');
+        const toggleBtn = document.getElementById('toc-toggle');
+        const overlay = document.getElementById('toc-overlay');
+        const tocLinks = document.querySelectorAll('nav.toc a');
+
+        function toggleTOC() {
+            toc.classList.toggle('active');
+            overlay.classList.toggle('active');
+            toggleBtn.textContent = toc.classList.contains('active') ? '✕' : '☰';
+            
+            if (window.innerWidth <= 1100) {
+                document.body.style.overflow = toc.classList.contains('active') ? 'hidden' : '';
+            }
+        }
+
+        toggleBtn.addEventListener('click', toggleTOC);
+        overlay.addEventListener('click', toggleTOC);
+
+        tocLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        if (window.innerWidth <= 1100 && toc.classList.contains('active')) {
+                            toggleTOC();
+                        }
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 30,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             });
         });
